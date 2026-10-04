@@ -57,6 +57,8 @@ herdr --session "$session" agent read "$name" --source recent-unwrapped --lines 
 
 For parallel submissions, omit `--wait`, then use `agent wait "$name" --timeout 120000` for each agent. Use asynchronous tool execution so long waits do not prevent progress updates. Quote prompt arguments safely or use structured process arguments; shell interpolation must not execute text from the brief.
 
+Persist toward the goal across turns; you do not need to keep a single thread continuously running. When progress depends on an external event, complete any independent work and use a supported scheduling or notification mechanism that can resume the agent after the turn ends. Prefer an event-triggered callback or a scheduled check over repeated idle polling. A running Herdr session alone does not arrange agent resumption. Confirm registration before promising a future check-in, and preserve enough task context to resume. If no supported mechanism is available or registration fails, report what remains pending and how to resume without promising an automatic follow-up. Honor later user instructions to pause or stop. On pause, stop, or completion, cancel pending check-ins where supported and report whether cancellation was confirmed; preserve the current task status so a late callback does not restart stopped or completed work.
+
 Completion is both a settled agent state and output that answers the assigned brief:
 
 - `idle` and `done` mean ready for input; read the response to assess completion.
