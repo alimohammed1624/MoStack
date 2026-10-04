@@ -21,9 +21,8 @@ Each skill is a `SKILL.md` with YAML frontmatter (`name`, `description`) that Cl
 its description matches the task. The description is itself under test: does the right skill fire
 for a given phrasing, and does it stay silent when another is the better fit?
 
-There are **four** skills and nothing else: the three the design specifies, plus gh-wrapper. Each is
-a single `SKILL.md` that is complete on its own — no shared reference files, no agent definitions,
-no seed assets.
+There are **five** skills: the three workflow skills the design specifies, gh-wrapper, and herdr-agents.
+Each has a `SKILL.md` entrypoint; some include supporting references.
 
 Each of the three workflow skills carries **its own copy of the substrate**, under a `## The
 Substrate` heading: the deterministic paths, the bootstrap-and-pull preflight, the `tracks.yml`
@@ -49,6 +48,16 @@ fields and never accumulates issue state; that timeline lines are only ever appe
 loaded by a repo-relative path. That path never resolved, because these skills run while the developer
 is standing in a product repo — so all three failed at their first instruction and proceeded on the
 substrate they half-remembered.)*
+
+### herdr-agents
+
+[Herdr agents](skills/herdr-agents/SKILL.md) drives Claude Code, Codex, Cursor Agent, and other supported coding
+agents when the user requests them. It covers inherited Herdr context and explicit named sessions
+from external terminals, task briefs, completion and output recovery, and follow-up. Agents and
+panes remain open after results are collected; the driver asks whether to close them.
+
+**What to probe:** external calls consistently target the named session; a stalled prompt is
+inspected before retrying; blocked UI is read before responding; cleanup preserves existing panes.
 
 ### start-work
 
