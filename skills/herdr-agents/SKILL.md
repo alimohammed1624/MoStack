@@ -11,20 +11,23 @@ Use this workflow when the user requests a particular external agent or Herdr op
 
 ## Choose the session
 
-Sessions persist independently of the attached TUI: detaching or losing the client connection leaves agents and pane processes running, and you can reattach to the same session anytime while its server remains alive. Reuse the existing session after reconnecting; persistence is bounded by the server process lifetime.
+Sessions persist independently of the attached TUI: detaching or losing the client connection leaves agents and pane processes running, and you can reattach to the same session anytime while its server remains alive. Reuse the selected session after reconnecting; persistence is bounded by the server process lifetime.
 
 Read `herdr --help` and the relevant command groups (`herdr agent`, `herdr pane`, `herdr session`) for installed syntax. Group help can exit 2 while printing valid documentation. `herdr --skill` supplies detailed lifecycle and terminal guidance. Bare `herdr` attaches a TUI; incomplete nested mutators may execute defaults.
 
-There are two supported operating modes for this skill:
+Use the dedicated `agents` Herdr session by default, whether running inside or outside Herdr. Use another session, including the caller's current session, only when the user explicitly requests it. `HERDR_ENV=1` does not change this selection.
 
-- **Inside Herdr:** when `HERDR_ENV=1`, use inherited session context and the caller's pane. Prefer a sibling pane in the current tab with the task's working directory and `--no-focus`.
-- **Outside Herdr:** use an explicit named session, defaulting to `agent`. Prefix every session control or inspection command with `herdr --session "$session"` and use explicit pane IDs or live agent names. This skill intentionally permits external named-session control: the bundled skill's `HERDR_ENV=1` prerequisite does not apply to this mode. Leave the environment truthful; target the selected session directly.
+```bash
+session=agents
+```
+
+Set `session` to the user's requested session when explicitly overridden. If the user requests the current session, resolve its name from the caller's Herdr context. Prefix every session control or inspection command with `herdr --session "$session"` and use explicit pane IDs or live agent names from that session. This skill permits named-session control from inside or outside Herdr: the bundled skill's `HERDR_ENV=1` prerequisite does not apply. Leave the environment truthful; target the selected session directly.
 
 Check the selected session with `pane list`. If it returns `server_not_running`, start `herdr --session "$session" server` through a long-running process tool, retain its handle, and check `pane list` again for readiness. `status server` can exit 0 while reporting that no server is running. Keep the server process alive for the work; tool process lifetime may limit persistence after the turn. Report startup errors without switching to another session.
 
 From the live response choose an explicit anchor pane. In an existing session, inspect its layout and preserve existing occupants. IDs are scoped to a server; copy them from JSON, never from an earlier run or another session. If startup yields no pane, consult workspace creation help and create the minimal workspace in the task directory. Record which resources this task created.
 
-The examples below use external named-session mode. In managed mode omit the named-session prefix and use the inherited caller pane as the anchor.
+The examples below use the selected session explicitly in every environment.
 
 ## Start the requested agent
 

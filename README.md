@@ -52,11 +52,13 @@ substrate they half-remembered.)*
 ### herdr-agents
 
 [Herdr agents](skills/herdr-agents/SKILL.md) drives Claude Code, Codex, Cursor Agent, and other supported coding
-agents when the user requests them. It covers inherited Herdr context and explicit named sessions
-from external terminals, task briefs, completion and output recovery, and follow-up. Agents and
+agents when the user requests them. It uses the dedicated `agents` Herdr session inside and outside
+Herdr, switching to the current or another session only on explicit user request. It covers task
+briefs, completion and output recovery, and follow-up. Agents and
 panes remain open after results are collected; the driver asks whether to close them.
 
-**What to probe:** external calls consistently target the named session; a stalled prompt is
+**What to probe:** all calls target `agents` unless the user explicitly selects another session,
+even when running inside Herdr; a stalled prompt is
 inspected before retrying; blocked UI is read before responding; cleanup preserves existing panes.
 
 ### start-work
