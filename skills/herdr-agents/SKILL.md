@@ -17,6 +17,8 @@ Read `herdr --help` and the relevant command groups (`herdr agent`, `herdr pane`
 
 Use the dedicated `agents` Herdr session by default, whether running inside or outside Herdr. Use another session, including the caller's current session, only when the user explicitly requests it. `HERDR_ENV=1` does not change this selection.
 
+The session name is `agents` (plural). The singular `agent` in `herdr agent ...` is a command group, not a session name.
+
 ```bash
 session=agents
 ```
@@ -53,12 +55,14 @@ Write a self-contained brief: goal, absolute working paths, relevant context, al
 For independent tasks, use separate named agents and submit their briefs before waiting. Give concurrent writers disjoint files or explicitly chosen worktrees; a pane alone does not isolate filesystem changes. Keep dependent tasks sequential. Do not redo delegated work while its agent is running.
 
 ```bash
-herdr --session "$session" agent prompt "$name" "$brief" --wait --timeout 120000
+herdr --session "$session" agent prompt "$name" "$brief" --wait --timeout 60000
 herdr --session "$session" agent get "$name"
 herdr --session "$session" agent read "$name" --source recent-unwrapped --lines 120
 ```
 
-For parallel submissions, omit `--wait`, then use `agent wait "$name" --timeout 120000` for each agent. Use asynchronous tool execution so long waits do not prevent progress updates. Quote prompt arguments safely or use structured process arguments; shell interpolation must not execute text from the brief.
+For parallel submissions, omit `--wait`, then use `agent wait "$name" --timeout 60000` for each agent. Always set a finite Herdr timeout. Use asynchronous tool execution with a short initial yield so waits do not prevent progress updates. When the tool yields a running process/session/cell handle, resume that same handle until it exits; a tool yield is not a Herdr timeout or child completion. Quote prompt arguments safely or use structured process arguments; shell interpolation must not execute text from the brief.
+
+After a Herdr timeout or `agent_prompt_stalled`, inspect `agent get` and `agent read` before another wait. If output shows ongoing work, continue with a bounded `agent wait`. If output shows a completed answer, approval prompt, or no progress despite a working state, run `herdr --session "$session" agent explain "$name" --json` to diagnose state detection and resolve the actual condition. Repeated unchanged evidence calls for diagnosis or a blocker report, not another identical wait. Preserve the existing prompt; resubmit only after establishing that it was not delivered.
 
 Persist toward the goal across turns; you do not need to keep a single thread continuously running. When progress depends on an external event, complete any independent work and use a supported scheduling or notification mechanism that can resume the agent after the turn ends. Prefer an event-triggered callback or a scheduled check over repeated idle polling. A running Herdr session alone does not arrange agent resumption. Confirm registration before promising a future check-in, and preserve enough task context to resume. If no supported mechanism is available or registration fails, report what remains pending and how to resume without promising an automatic follow-up. Honor later user instructions to pause or stop. On pause, stop, or completion, cancel pending check-ins where supported and report whether cancellation was confirmed; preserve the current task status so a late callback does not restart stopped or completed work.
 
@@ -70,6 +74,12 @@ Completion is both a settled agent state and output that answers the assigned br
 - Timeout or `agent_prompt_stalled` does not prove non-delivery. Read before deciding whether to wait, recover, or resubmit. Waits track lifecycle, not a uniquely identified prompt; wait for an existing turn before assigning a new task to that agent.
 
 Agent names identify live occupants, not durable conversations. Recheck identity before following up after an exit or replacement. Collect actual terminal output; distinguish the child's claims from changes or checks you independently verified.
+
+### Hooks and parent resumption
+
+Check the installed `herdr integration status` and command help before relying on hooks. In Herdr 0.9.3, the Claude and Codex integration hooks report session identity on `SessionStart`; they do not report completion or resume a parent agent. Agent waits already use server-side events, while Claude/Codex readiness is detected from terminal content. Reinstalling these identity hooks does not fix missed completion detection or an unresumed tool handle.
+
+When the installed version supports completion hooks or plugin status events, verify both parts of the path: the child emits the relevant event, and a supported receiver actually resumes the parent with the task context. A status notification alone does not establish parent resumption. Register and confirm that path before submitting work and yielding the parent turn; otherwise use the bounded wait-and-inspect workflow above. Follow the registration, cancellation, and pause/stop rules above for any callback.
 
 If the response is truncated, increase `--lines`. Alternate-screen history is not always recoverable. If a larger read still fails, ask the same agent to write its completed answer to a temporary Markdown file and return its path, then read that file on the same machine. Use this as recovery, not a mandatory output format.
 
