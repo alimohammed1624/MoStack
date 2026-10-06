@@ -676,9 +676,8 @@ has written that policy down, a transition derived from it is derived, not guess
 something happened to the work — so it is the one field a workflow can legitimately
 drive without asking each time.
 
-The workday skills define exactly that, in `status-policy.yml` in the org's tracking
-repo (start-work / end-work → *Board `Status` — the transition policy*). It maps
-lifecycle moments to option **names**, and the calling skill resolves those names to
+A calling workflow defines that by writing a transition policy down — a file that maps
+lifecycle moments to option **names** — and the calling skill resolves those names to
 option ids against **this run's** field discovery.
 
 Three conditions make such a write legal, and all three must hold:

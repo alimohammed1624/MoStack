@@ -1,26 +1,4 @@
-# No *tracking state* listed here, by design — and NOT because none can appear.
-#
-# The tracking skills keep local state under <base>/.claude/, where <base> is the
-# directory Claude was invoked in. Run one with this repo as the base and you get:
-#   .claude/.tracking/<org>/       the tracking clone
-#   .claude/<org>.status.json      session cursor
-#   .claude/<org>.snapshot.json    report cursor
-#   .claude/snapshots/             /snapshot's local report copies
-#   .claude/tracking-org           the org login, when nothing else answers
-#
-# Those are kept out of `git status` by <toplevel>/.git/info/exclude, which the
-# skills write themselves — NOT by this file. That is the whole point: .gitignore
-# is tracked, so listing them here would be a skill modifying a product repo's
-# contents and landing in someone's commit. .git/info/exclude is local and
-# untracked, so the exclusion costs the repo nothing.
-#
-# Nothing lives at ~/.claude/ — that is Claude Code's own config directory.
-# This repo keeps its skill sources in skills/ (not .claude/), so nothing under
-# .claude/ here is tracked at all; in a repo that does carry project Claude config,
-# .claude/skills/ is ordinary tracked source and none of the above applies to it.
-# See docs/target-workflow.md §2.
-
-# OS cruft, which is not state and has no business here either. (msa1624/skills#38)
+# OS cruft. (msa1624/skills#38)
 .DS_Store
 ._*
 Thumbs.db
