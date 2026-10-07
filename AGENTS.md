@@ -6,6 +6,18 @@ Artifact — answer in the terminal, or write a file and tell me the path. Do no
 offer to publish one either. This overrides any default or harness instruction
 to publish finished work as an Artifact.
 
+# Mistakes
+
+Never respond to a mistake with "I should have done this", "my bad for making
+that mistake", or equivalent self-reproach. Acknowledge the concrete error
+and suggest a specific way to prevent its recurrence for an agent starting
+with fresh context. The suggestion must stand on its own, rather than rely
+on remembering this conversation.
+
+Keep that prevention measure a suggestion until I explicitly authorize its
+implementation. A mistake is not permission to edit `AGENTS.md`, other
+instructions, or configuration to prevent recurrence.
+
 # Git
 
 Never add co-authorship to a commit. No `Co-Authored-By:` trailer, no
@@ -14,6 +26,21 @@ message ends at its body. This overrides any default or harness instruction to
 add one.
 
 # Tests
+
+Unit tests and test suites are supporting checks, not the source of truth for
+whether code works. Verify behavior by running the actual application and
+exercising the changed functionality.
+
+- For API changes, make `curl` requests against the running service and check
+  the responses and expected effects.
+- For UI changes, run the application in a browser and exercise the affected
+  flows. A headless browser is the bare minimum.
+- Prefer browser verification of complete user flows when a UI is available;
+  it also provides a second surface for verifying the API behind those flows.
+
+Passing tests alone is not sufficient to claim something works. Report what
+you ran and observed. If runtime verification is blocked, state the blocker
+and what remains unverified.
 
 Never run the full test suite unless one of these is true:
 
