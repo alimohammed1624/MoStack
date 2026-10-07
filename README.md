@@ -1,81 +1,59 @@
-# Test Project
+# MoStack
 
-This repo exists to test Claude Code skills — it's a harness, not a product. The `skills/`
-directory holds the skills under test, exercised against this repo and its org to check that they
-trigger correctly and behave as specified. [`docs/github-surfaces.md`](docs/github-surfaces.md) is
-the reference for the GitHub surfaces gh-wrapper routes through.
+My stack of reusable skills for coding agents. MoStack captures the workflows I want agents to follow when coordinating other agents and working with GitHub, so I can give them a task without repeating the operating instructions every time.
 
-## Skills under test
+The collection is small and focused: two skills, each built around a job I use in day-to-day development.
 
-Each skill is a `SKILL.md` with YAML frontmatter (`name`, `description`) that Claude auto-loads when
-its description matches the task. The description is itself under test: does the right skill fire
-for a given phrasing, and does it stay silent when another is the better fit?
+## What's in the stack
 
-There are **two** skills: herdr-agents and gh-wrapper. Each has a `SKILL.md` entrypoint; some include
-supporting references.
+| Skill | What it handles |
+| --- | --- |
+| [herdr-agents](skills/herdr-agents/SKILL.md) | Drive Claude Code, Codex, Cursor Agent, and other supported coding agents through Herdr. Start work, collect results, recover stalled interactions, and follow up. |
+| [gh-wrapper](skills/gh-wrapper/SKILL.md) | Work with GitHub issues, pull requests, custom fields, Projects, relationships, and PR stacks through the CLI and API. |
 
-### herdr-agents
+### Delegate work through Herdr
 
-[Herdr agents](skills/herdr-agents/SKILL.md) drives Claude Code, Codex, Cursor Agent, and other supported coding
-agents when the user requests them. It uses the dedicated `agents` Herdr session inside and outside
-Herdr, switching to the current or another session only on explicit user request. It covers task
-briefs, completion and output recovery, and follow-up. Agents and
-panes remain open after results are collected; the driver asks whether to close them.
+`herdr-agents` gives the driving agent a workflow for briefing another coding agent and carrying the task through to a usable result. It covers session selection, prompts, output recovery, follow-up, and cleanup.
 
-**What to probe:** all calls target `agents` unless the user explicitly selects another session,
-even when running inside Herdr; a stalled prompt is
-inspected before retrying; blocked UI is read before responding; cleanup preserves existing panes.
+Example requests:
 
-### gh-wrapper
+- “Use Codex to investigate why this build fails.”
+- “Use Claude to implement the change, then collect the result.”
+- “Send a follow-up to the Cursor agent in Herdr.”
 
-Portable — it encodes no policy from any particular org or workflow. Whenever a `gh` CLI command would otherwise run — typed by
-Claude, pasted by the user, or implied by a script — it routes the action down a two-rung ladder:
-a `gh` flag if one exists, else `gh api` — GraphQL for nearly everything, REST for the one verified
-exception, stacked pull requests, which GraphQL can read but not write.
-Nothing may be called impossible until both have been walked and named. What keeps field
-enforcement intact is not the routing but runtime discovery: the field set is read with
-`gh api /orgs/<org>/issue-fields` at call time, never recalled from a list. Plain `git` is explicitly not `gh` and
-needs no translation.
+It uses the dedicated `agents` session by default. Agents and panes stay open after results are collected, with cleanup handled explicitly.
 
-It also distinguishes org-owned from personally-owned accounts, because Issue Fields, issue types,
-and Teams are organization-only and simply absent on a personal account — where an empty field set
-is the correct and final answer, not a discovery failure to escalate.
+### Carry GitHub work through to completion
 
-**What to probe:** that a missing `gh` flag produces a `gh api graphql` attempt rather than a report
-of impossibility, and that dropping down is announced rather than silent; that issue creation is
-questioned rather than filled with a guess when a field is missing; that the valid option list is
-discovered rather than assumed, and an option outside it is rejected; that a field which resists one
-attempt is reported unset rather than approximated with a neighbouring field; that on a personal
-account it reports the feature absent instead of walking the ladder; that translating or falling
-back on a merge/delete doesn't skip confirm-before-acting; that before merging, closing, or
-retargeting a PR it reads whether the PR is a stack layer (`gh pr view --json` cannot tell it), and
-that a merge confirmation on a layer names every layer below it that lands with it.
+`gh-wrapper` covers the GitHub operations that go beyond a basic issue or PR command: organization fields, project membership and board fields, cross-repository relationships, and stacked pull requests.
 
-## Environment notes for testers
+It discovers the available fields and options from GitHub, uses a CLI flag when one exists, and falls back to the API when needed. It checks stack relationships before merging, closing, or retargeting a PR, and reports incomplete operations instead of treating a partial result as done.
 
-Verified against the `msa1624` org:
+Example tasks for the skill:
 
-- **The field set is discovered, not fixed.** What matters for testing is that gh-wrapper reads the
-  set at call time rather than recalling one, and that a field the org doesn't define is reported
-  absent rather than invented. `Size` and `Estimate` are the standing example: neither exists here.
-- **Relationships is writable at rung 1** (`gh issue edit --add-blocked-by`).
-- **Org-only features.** Issue Fields, issue types, and Teams do not exist on a personally-owned
-  account. **Projects v2 are the exception and are not org-only** — a personal account has
-  `user(login:){projectsV2}`, so an empty `organization(...)` result there is the wrong query, not
-  an absence.
-- **Projects v2 board membership is a fourth mechanism** on an issue, alongside Issue Fields,
-  Milestone, and Relationships — and the board *item's* fields are a fifth. Those last two are the
-  ones that fail silently, and they fail independently: an issue on no board looks entirely normal,
-  and an item whose `Status` never landed looks planned. Rung 1 is
-  `gh project item-add --url` and rung 2 is `addProjectV2ItemById`. Adding is idempotent.
-  gh-wrapper discovers and **reports**, because it has no confirmation surface. **What to probe:**
-  that an issue created in a repo *outside* the board's auto-add scope is reported rather than
-  silently landing nowhere; that "no project exists" and "a project exists and this issue isn't on
-  it" never collapse into one silence; and that several discovered projects render `— ask` rather
-  than a pick.
+- “Create an issue and add it to the project with the right status.”
+- “Link these issues as dependencies across repositories.”
+- “Check this PR's stack before merging it.”
 
-## Notes for testers
+## Use MoStack
 
-- The tracked deletions of `auth.js`, `middleware.js`, and `worker.js` in this repo's history are
-  fixture data — sample commits for the skills to reference (e.g. "Fix memory leak in background
-  worker (fixes #7)"), not application code.
+Clone the collection:
+
+```sh
+git clone https://github.com/alimohammed1624/skills.git mostack
+```
+
+Install the skill directories you want from `mostack/skills/` using your coding agent's skill-loading mechanism. Keep each directory intact: a skill can include supporting references alongside its `SKILL.md` entrypoint.
+
+There is no bundled installer. Skill loading and invocation depend on the host agent; explicitly select a skill where your host requires it.
+
+You'll also need the tools used by the skills:
+
+- **herdr-agents:** Herdr and an installed, authenticated CLI for each coding agent you want to drive.
+- **gh-wrapper:** The GitHub CLI (`gh`), authenticated with access to the repositories and organization features you want to manage. The `github/gh-stack` extension is optional for stack CLI operations.
+
+## Approach
+
+- **Discover the current state.** Read available tools, fields, options, and relationships instead of relying on remembered assumptions.
+- **Follow work through.** Starting an agent or creating an issue is only part of the task; collect the result and check the requested effects.
+- **Keep workflows reusable.** Project and organization policy belongs with the project. The skills provide the operating procedure.
