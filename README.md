@@ -43,9 +43,43 @@ Clone the collection:
 git clone https://github.com/alimohammed1624/skills.git mostack
 ```
 
-Install the skill directories you want from `mostack/skills/` using your coding agent's skill-loading mechanism. Keep each directory intact: a skill can include supporting references alongside its `SKILL.md` entrypoint.
+### Symlink skills into your agent
 
-There is no bundled installer. Skill loading and invocation depend on the host agent; explicitly select a skill where your host requires it.
+On macOS or Linux, symlink (soft link) each skill directory into your agent's user-level skills directory. This keeps supporting files alongside `SKILL.md`, and changes from `git pull` are available through the links. Keep the checkout in place so the links continue to work.
+
+| Agent | User-level skills directory |
+| --- | --- |
+| [Claude Code](https://code.claude.com/docs/en/skills#where-skills-live) | `~/.claude/skills` |
+| [Cursor](https://cursor.com/docs/skills) | `~/.cursor/skills` |
+| [Gemini CLI](https://geminicli.com/docs/cli/skills/#discovery-tiers) | `~/.gemini/skills` |
+| [Codex](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills) | `~/.codex/skills` (or `$CODEX_HOME/skills` if configured); current docs recommend `~/.agents/skills` |
+| [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/configuration.md) | `~/.pi/agent/skills` (or `$PI_CODING_AGENT_DIR/skills` if configured) |
+| [OpenCode](https://opencode.ai/docs/skills/) | `~/.config/opencode/skills` (or `$XDG_CONFIG_HOME/opencode/skills` if configured) |
+
+Run this from the directory containing your `mostack` clone. Set `destination` to the agent you want; repeat with another destination to use the skills in multiple agents.
+
+```sh
+cd mostack
+skills_dir="$(pwd -P)/skills"
+
+# Choose one destination from the table above.
+destination="$HOME/.claude/skills"
+
+mkdir -p "$destination"
+for skill in "$skills_dir"/*; do
+  [ -f "$skill/SKILL.md" ] || continue
+  link="$destination/$(basename "$skill")"
+  if [ -e "$link" ] || [ -L "$link" ]; then
+    printf 'Skipping existing entry: %s\n' "$link"
+    continue
+  fi
+  ln -s "$skill" "$link"
+done
+```
+
+The command preserves existing files, directories, and symlinks. When copying a destination into the command, use `$HOME` instead of a quoted `~`, which the shell does not expand. Restart your agent or refresh its skills after linking; skill loading and invocation depend on the host agent.
+
+If you use the shared `~/.agents/skills` directory, avoid also linking the same skills into a tool-specific directory that the agent scans.
 
 You'll also need the tools used by the skills:
 

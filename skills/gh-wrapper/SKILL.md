@@ -1,7 +1,6 @@
 ---
 name: gh-wrapper
 description: Use when about to run any `gh` CLI command (`gh issue`, `gh pr`, `gh repo`, `gh api`), when the user pastes one, when setting a custom Issue Field (org-defined single-select, date, number, or text) or an issue type on an issue, when creating an issue that may belong on a Projects v2 board, when setting Projects v2 board item fields (Status, Size, Estimate, Iteration/sprint, or any board-defined field), when linking issues across repositories, when opening a pull request or linking one to its issue, when running `gh stack` or creating a PR whose base is another PR's head branch, when about to merge, close, or retarget any PR (it may be a stack layer), or when about to report that a GitHub field, board membership, relationship, PR link, or stack membership cannot be set, or when asked to add screenshots or images to a PR or issue body
-disable-model-invocation: true
 ---
 
 # gh Wrapper: Route to the Right GitHub Surface

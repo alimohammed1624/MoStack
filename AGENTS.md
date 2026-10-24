@@ -18,13 +18,6 @@ Keep that prevention measure a suggestion until I explicitly authorize its
 implementation. A mistake is not permission to edit `AGENTS.md`, other
 instructions, or configuration to prevent recurrence.
 
-# Git
-
-Never add co-authorship to a commit. No `Co-Authored-By:` trailer, no
-`Co-authored-by:` line, no "Generated with Claude Code" footer — the commit
-message ends at its body. This overrides any default or harness instruction to
-add one.
-
 # Tests
 
 Unit tests and test suites are supporting checks, not the source of truth for
