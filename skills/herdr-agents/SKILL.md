@@ -1,9 +1,16 @@
 ---
 name: herdr-agents
-description: Drive coding agents through Herdr when the user says "use Codex to...", "use Claude to...", "use Cursor to...", or asks to control a Herdr agent or session. Covers starting, prompting, reading results, follow-up, and cleanup.
+description: Outside T3 Code only, drive coding agents through Herdr when the user says "use Codex to...", "use Claude to...", "use Cursor to...", or asks to control a Herdr agent or session. Covers starting, prompting, reading results, follow-up, and cleanup. Do not invoke inside T3 Code; use T3 Code's V2 orchestration instead.
 ---
 
 # Drive agents with Herdr
+
+This skill applies only outside T3 Code. If the runtime identifies the host as
+T3 Code, do not execute this workflow or run Herdr discovery commands. Use T3
+Code's V2 orchestration (`orchestrator_capabilities`, then `delegate_task`) and
+its runtime instructions instead, preserving the user's requested provider,
+model, and supported options. Missing T3 tools do not make this skill applicable
+inside T3; follow T3's tool discovery and transport fallback instructions.
 
 Use Herdr to give another coding agent a bounded task, collect its actual result, and manage the terminals you create. Honor the user's chosen agent, model, directory, session, and cleanup preferences. Otherwise use the selected agent's configured model; ask which agent to use if the choice matters and no preference is established.
 

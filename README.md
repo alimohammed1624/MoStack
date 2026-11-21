@@ -2,18 +2,21 @@
 
 My stack of reusable skills for coding agents. MoStack captures the workflows I want agents to follow when coordinating other agents and working with GitHub, so I can give them a task without repeating the operating instructions every time.
 
-The collection is small and focused: two skills, each built around a job I use in day-to-day development.
+The collection is small and focused, with each skill built around a job I use in day-to-day development.
 
 ## What's in the stack
 
 | Skill | What it handles |
 | --- | --- |
-| [herdr-agents](skills/herdr-agents/SKILL.md) | Drive Claude Code, Codex, Cursor Agent, and other supported coding agents through Herdr. Start work, collect results, recover stalled interactions, and follow up. |
+| [herdr-agents](skills/herdr-agents/SKILL.md) | Outside T3 Code, drive Claude Code, Codex, Cursor Agent, and other supported coding agents through Herdr. Start work, collect results, recover stalled interactions, and follow up. |
 | [gh-wrapper](skills/gh-wrapper/SKILL.md) | Work with GitHub issues, pull requests, custom fields, Projects, relationships, and PR stacks through the CLI and API. |
+| [iterative-review](skills/iterative-review/SKILL.md) | Review changes with Codex GPT-6.2 Sol using runtime evidence, challenge scope creep, iterate on justified fixes, then run the full suite and create or update the PR when applicable. |
 
 ### Delegate work through Herdr
 
 `herdr-agents` gives the driving agent a workflow for briefing another coding agent and carrying the task through to a usable result. It covers session selection, prompts, output recovery, follow-up, and cleanup.
+
+This skill applies only outside T3 Code. Agents running inside T3 Code use its V2 orchestration instead of invoking `herdr-agents`. The shared `AGENTS.md` also directs those agents to use T3 Code's collaborative browser for browser verification. Other environments retain their existing workflows.
 
 Example requests:
 
@@ -34,6 +37,16 @@ Example tasks for the skill:
 - “Create an issue and add it to the project with the right status.”
 - “Link these issues as dependencies across repositories.”
 - “Check this PR's stack before merging it.”
+
+### Review changes with runtime evidence
+
+`iterative-review` asks Codex GPT-6.2 Sol to run the changed functionality and support its findings with evidence from applicable browser flows, API requests, commands, and state checks. The implementing agent evaluates the findings and can challenge changes that expand scope, risk regressions, or add unnecessary complexity.
+
+Review and fixes continue until the implementing agent is satisfied. It then runs the full test suite and creates or updates the PR when one is part of the task.
+
+Example request:
+
+- “Use iterative-review on these changes, then update the PR.”
 
 ## Use MoStack
 
@@ -83,8 +96,9 @@ If you use the shared `~/.agents/skills` directory, avoid also linking the same 
 
 You'll also need the tools used by the skills:
 
-- **herdr-agents:** Herdr and an installed, authenticated CLI for each coding agent you want to drive.
+- **herdr-agents (outside T3 Code):** Herdr and an installed, authenticated CLI for each coding agent you want to drive. Inside T3 Code, use its V2 orchestration instead; Herdr is not required.
 - **gh-wrapper:** The GitHub CLI (`gh`), authenticated with access to the repositories and organization features you want to manage. The `github/gh-stack` extension is optional for stack CLI operations.
+- **iterative-review:** Access to Codex with `gpt-6.2-sol` through the host's supported delegation tools, plus the runtime tools needed by the project. Outside T3 Code, external Codex sessions use `herdr-agents`; PR work uses `gh-wrapper`.
 
 ## Approach
 
