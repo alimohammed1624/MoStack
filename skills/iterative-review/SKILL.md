@@ -1,17 +1,39 @@
 ---
 name: iterative-review
-description: Iteratively review changed code with Codex GPT-6.2 Sol, or an independently scoring council of Sol, Astra, Opus, and Fable when council review is requested, using actual runtime checks and evidence. Use when an iterative review, council review, or a review-fix-verify loop is requested. Challenge scope creep and risky fixes, then run the full suite and create or update the PR when it is part of the task.
+description: Iteratively review changed code with Codex GPT-6.2 Sol, or an independently scoring council of Sol, Astra, Opus, and Fable when council review is requested, using actual runtime checks and evidence. Use when an iterative review, council review, or a review-fix-verify loop is requested. A plain "review X" or "council review X" request is report-only: one round, no code changes. Iterate only when the user gives a round count, a score target, or asks for fixes. Challenge scope creep and risky fixes, then run the full suite and create or update the PR when it is part of the task.
 ---
 
 # Iterative review
 
 The implementing agent owns the result. By default, delegate independent reviews
 to **Codex using `gpt-6.2-sol`**. When the user requests **council review**, use the
-four-member council described below. Assess the findings, make justified fixes,
-and repeat according to the stopping rules below. When the result is ready,
+four-member council described below. Assess the findings. When the user asked
+for fixes (see "Review only unless asked to fix"), make justified fixes and
+repeat according to the stopping rules below. When the result is ready,
 complete the final verification gate and create or update the PR if one is part
 of the task. Stopping iteration, a reviewer's approval, or passing tests alone
 does not establish successful completion.
+
+## Review only unless asked to fix
+
+A plain request to review something asks for findings only. This applies to a
+single reviewer ("review PR 222", "sol review this branch") and to a council
+("council review PR 222"): naming the council chooses the reviewers, not a
+loop. Run one review round (in council mode, all four members with their
+scores), assess the findings, and report them. Do not edit code, create a
+checkout to fix things, commit, push, run later rounds or start the final gate.
+
+Enter the review-fix loop only when the user states an outcome or asks for
+fixes in their own words:
+
+- **An outcome:** a round count ("3 rounds", "up to 5 rounds") or a score
+  target ("until it scores 9/10"). This makes the review iterative, single or
+  council, under the stopping rules below.
+- **Explicit fixing:** "fix", "iterate", "address the findings", "review and
+  fix", "iterative review", "until satisfied".
+
+A finding's severity is not permission to fix it. If the scope is unclear,
+report the findings and ask whether to fix them.
 
 ## Establish the review target
 
@@ -37,6 +59,9 @@ new testing framework. During iteration, keep automated tests focused on the
 changes. Reserve the full suite for the final gate below.
 
 ## Choose when to stop
+
+These rules apply only once the review is iterative (see "Review only unless
+asked to fix"); a report-only review always stops after one round.
 
 Infer the stopping rule, score target, and iteration count from how the user
 invokes the skill. Do not ask the user to choose or confirm them. An explicit
@@ -319,10 +344,28 @@ anyway. Use the comparison to substantiate acceptance or pushback. If the base
 cannot run or the conditions cannot be made comparable, state that limitation;
 do not infer that the finding is either a regression or harmless.
 
+**Fix the behavior, not the example.** A finding usually describes one example
+of a broader faulty behavior. Before fixing, state the behavior in general
+terms. Then list the other cases that hit the same behavior, at least:
+
+- **Simpler cases:** the same trigger with less around it, such as only one
+  record, no earlier history, or an empty or missing value. Check that guards
+  and early returns before the fix let these cases reach it.
+- **Sibling decisions:** other code paths that decide the same thing
+  separately, such as a status shown to the user and the job, query or gate
+  that acts on it. Fix them together, preferably by sharing one helper.
+
+Fix and test every listed case, not only the reported example, and do not
+judge the fix from its diff alone: reread the surrounding function. Give the
+next round's reviewers the general behavior and the listed cases, and ask them
+to exercise each one at runtime. In council mode, phrase these as neutral
+requirements to check, without saying which finding or member prompted them.
+
 Apply the stopping rules before continuing the review-fix loop. When another
 iteration is warranted, implement justified fixes within the authorized scope.
-In single-reviewer mode, ask a fresh reviewer to verify the fixes and nearby
-regression risks on the new candidate, and to address any disputed findings.
+In single-reviewer mode, ask a fresh reviewer to verify the fixes across the
+listed cases and nearby regression risks on the new candidate, and to address
+any disputed findings.
 In council mode, start a fresh four-member round on the new candidate using the
 isolation rules above. Maintain a short record of accepted findings, their
 resolutions, and rejected or unresolved findings with reasons.
